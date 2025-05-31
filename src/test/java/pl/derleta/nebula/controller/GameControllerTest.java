@@ -15,6 +15,7 @@ import pl.derleta.nebula.controller.request.GameFilterRequest;
 import pl.derleta.nebula.controller.request.GameNewRequest;
 import pl.derleta.nebula.controller.response.GameResponse;
 import pl.derleta.nebula.domain.model.Game;
+import pl.derleta.nebula.exceptions.TokenExpiredException;
 import pl.derleta.nebula.service.AuthorizationService;
 import pl.derleta.nebula.service.GameProvider;
 import pl.derleta.nebula.service.GameUpdater;
@@ -200,6 +201,22 @@ class GameControllerTest {
     }
 
     @Test
+    void add_expiredToken_throwsTokenExpiredException() {
+        // Arrange
+        String expiredToken = "expired-token";
+        when(authorizationService.notContainsAdminRole(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
+
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> gameController.add(expiredToken, gameNewRequest));
+
+        // Verify interactions
+        verify(authorizationService).notContainsAdminRole(expiredToken);
+        verify(gameProvider, never()).get(anyInt());
+    }
+
+    @Test
     void update_withAdminRole_updatesGame() {
         // Arrange
         int id = 1;
@@ -249,6 +266,23 @@ class GameControllerTest {
     }
 
     @Test
+    void update_expiredToken_throwsTokenExpiredException() {
+        // Arrange
+        int id = 1;
+        String expiredToken = "expired-token";
+        when(authorizationService.notContainsAdminRole(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
+
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> gameController.update(expiredToken, id, gameNewRequest));
+
+        // Verify interactions
+        verify(authorizationService).notContainsAdminRole(expiredToken);
+        verify(gameProvider, never()).get(anyInt());
+    }
+
+    @Test
     void delete_withAdminRole_deletesGame() {
         // Arrange
         int id = 1;
@@ -282,6 +316,23 @@ class GameControllerTest {
         assertNull(response.getBody());
         verify(authorizationService, times(1)).notContainsAdminRole(accessToken);
         verify(gameUpdater, never()).delete(id);
+    }
+
+    @Test
+    void delete_expiredToken_throwsTokenExpiredException() {
+        // Arrange
+        int id = 1;
+        String expiredToken = "expired-token";
+        when(authorizationService.notContainsAdminRole(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
+
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> gameController.delete(expiredToken, id));
+
+        // Verify interactions
+        verify(authorizationService).notContainsAdminRole(expiredToken);
+        verify(gameProvider, never()).get(anyInt());
     }
 
 }

@@ -350,4 +350,20 @@ class AccountControllerTest {
         verify(tokenProvider, times(1)).isValid(accessToken, passwordUpdateRequest.getUserId());
     }
 
+    @Test
+    void changePassword_expiredToken_throwsTokenExpiredException() {
+        // Arrange
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(eq(expiredToken), anyLong()))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
+
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> accountController.changePassword(expiredToken, passwordUpdateRequest));
+
+        // Verify interactions
+        verify(tokenProvider).isValid(eq(expiredToken), anyLong());
+        verify(tokenProvider, never()).getUserId(any());
+    }
+
 }

@@ -154,17 +154,13 @@ public final class AccountController {
     @PostMapping(value = "/" + DEFAULT_PATH + "/change-password", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<AccountResponse> changePassword(@CookieValue("accessToken") String accessToken,
                                                           @RequestBody PasswordUpdateRequest passwordUpdateRequest) {
-        try {
-            if (tokenProvider.isValid(accessToken, passwordUpdateRequest.getUserId())) {
-                var response = updater.updatePassword(accessToken, passwordUpdateRequest);
-                if (response instanceof AccountResponse instance && instance.isSuccess()) {
-                    return ResponseEntity.ok(response);
-                } else return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-            }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-        } catch (TokenExpiredException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AccountResponse(false, AccountResponseType.PASSWORD_CHANGE_ACCESS_TOKEN_EXPIRED));
+        if (tokenProvider.isValid(accessToken, passwordUpdateRequest.getUserId())) {
+            var response = updater.updatePassword(accessToken, passwordUpdateRequest);
+            if (response instanceof AccountResponse instance && instance.isSuccess()) {
+                return ResponseEntity.ok(response);
+            } else return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
     }
 
 }

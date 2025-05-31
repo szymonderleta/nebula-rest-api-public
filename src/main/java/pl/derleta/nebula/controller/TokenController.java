@@ -46,14 +46,13 @@ public final class TokenController {
      */
     @GetMapping(value = "/" + DEFAULT_PATH, produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<TokenDataResponse> get(@CookieValue("accessToken") String accessToken) {
-        try {
+        if (provider.isValid(accessToken)) {
             var response = modelAssembler.toModel(
                     provider.getTokenData(accessToken)
             );
             return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
-        } catch (TokenExpiredException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
 
     /**
@@ -65,12 +64,11 @@ public final class TokenController {
      */
     @GetMapping(value = "/" + DEFAULT_PATH + "/valid", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<Boolean> isValid(@CookieValue("accessToken") String accessToken) {
-        try {
-            var result = provider.isValid(accessToken);
+        var result = provider.isValid(accessToken);
+        if (result) {
             return ResponseEntity.ok(result);
-        } catch (TokenExpiredException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(false);
         }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(false);
     }
 
     /**
@@ -83,15 +81,11 @@ public final class TokenController {
      */
     @GetMapping(value = "/" + DEFAULT_PATH + "/roles", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<Set<Role>> getRoles(@CookieValue("accessToken") String accessToken) {
-        try {
-            var valid = provider.isValid(accessToken);
-            if (valid) {
-                Set<Role> roles = provider.getRoles(accessToken);
-                return ResponseEntity.ok(roles);
-            } else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        } catch (TokenExpiredException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
+        var valid = provider.isValid(accessToken);
+        if (valid) {
+            Set<Role> roles = provider.getRoles(accessToken);
+            return ResponseEntity.ok(roles);
+        } else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
 
     /**
@@ -104,15 +98,11 @@ public final class TokenController {
      */
     @GetMapping(value = "/" + DEFAULT_PATH + "/email", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<String> getEmail(@CookieValue("accessToken") String accessToken) {
-        try {
-            var valid = provider.isValid(accessToken);
-            if (valid) {
-                String email = provider.getEmail(accessToken);
-                return ResponseEntity.ok(email);
-            } else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        } catch (TokenExpiredException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(TokenResponseType.ACCESS_TOKEN_EXPIRED.getInfo());
-        }
+        var valid = provider.isValid(accessToken);
+        if (valid) {
+            String email = provider.getEmail(accessToken);
+            return ResponseEntity.ok(email);
+        } else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
 
     /**
@@ -125,15 +115,11 @@ public final class TokenController {
      */
     @GetMapping(value = "/" + DEFAULT_PATH + "/id", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<Long> getId(@CookieValue("accessToken") String accessToken) {
-        try {
-            var valid = provider.isValid(accessToken);
-            if (valid) {
-                Long id = provider.getUserId(accessToken);
-                return ResponseEntity.ok(id);
-            } else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        } catch (TokenExpiredException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(-1L);
-        }
+        var valid = provider.isValid(accessToken);
+        if (valid) {
+            Long id = provider.getUserId(accessToken);
+            return ResponseEntity.ok(id);
+        } else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
 
     /**
@@ -153,15 +139,11 @@ public final class TokenController {
      */
     @PostMapping(value = "/" + DEFAULT_PATH + "/refresh/access", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<Response> refreshAccess(@CookieValue("refreshToken") String refreshToken) {
-        try {
-            var valid = provider.isValid(refreshToken);
-            if (valid) {
-                var response = updater.refreshAccess(refreshToken);
-                return getResponseForRefreshAccess(response);
-            } else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        } catch (TokenExpiredException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
+        var valid = provider.isValid(refreshToken);
+        if (valid) {
+            var response = updater.refreshAccess(refreshToken);
+            return getResponseForRefreshAccess(response);
+        } else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
 
     /**

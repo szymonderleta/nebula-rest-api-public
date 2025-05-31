@@ -188,18 +188,21 @@ class UserAchievementControllerTest {
     }
 
     @Test
-    void get_expiredToken_returnsUnauthorized() {
+    void get_expiredToken_throwsTokenExpiredException() {
         // Arrange
-        when(tokenProvider.isValid(validToken)).thenThrow(new TokenExpiredException("Access token has expired"));
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
 
-        // Act
-        ResponseEntity<UserAchievementResponse> response = userAchievementController.get(123L, 1, validToken);
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> userAchievementController.get(userId, achievementId, expiredToken));
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertNull(response.getBody());
-        verify(tokenProvider, times(1)).isValid(validToken);
+        // Verify interactions
+        verify(tokenProvider).isValid(expiredToken);
+        verify(tokenProvider, never()).getUserId(any());
+        verify(userAchievementProvider, never()).get(any(), any());
+        verify(userAchievementModelAssembler, never()).toModel(any());
     }
 
     @Test
@@ -246,18 +249,21 @@ class UserAchievementControllerTest {
     }
 
     @Test
-    void getList_expiredToken_returnsUnauthorized() {
+    void getList_expiredToken_throwsTokenExpiredException() {
         // Arrange
-        when(tokenProvider.isValid(validToken)).thenThrow(new TokenExpiredException("Access token has expired"));
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
 
-        // Act
-        ResponseEntity<List<UserAchievementResponse>> response = userAchievementController.getList(validToken);
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> userAchievementController.getList(expiredToken));
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertNull(response.getBody());
-        verify(tokenProvider, times(1)).isValid(validToken);
+        // Verify interactions
+        verify(tokenProvider).isValid(expiredToken);
+        verify(tokenProvider, never()).getUserId(any());
+        verify(userAchievementProvider, never()).get(any(), any());
+        verify(userAchievementModelAssembler, never()).toModel(any());
     }
 
     @Test
@@ -305,19 +311,22 @@ class UserAchievementControllerTest {
     }
 
     @Test
-    void getPage_expiredToken_returnsUnauthorized() {
+    void getPage_expiredToken_throwsTokenExpiredException() {
         // Arrange
-        when(tokenProvider.isValid(validToken)).thenThrow(new TokenExpiredException("Access token has expired"));
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
 
-        // Act
-        ResponseEntity<Page<UserAchievementResponse>> response = userAchievementController.getPage(
-                0, 10, "achievementId", "asc", 5, "less or equal", validToken);
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> userAchievementController.getPage(
+                        0, 10, "achievementId", "asc", 5, "less or equal", expiredToken));
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertNull(response.getBody());
-        verify(tokenProvider, times(1)).isValid(validToken);
+        // Verify interactions
+        verify(tokenProvider).isValid(expiredToken);
+        verify(tokenProvider, never()).getUserId(any());
+        verify(userAchievementProvider, never()).get(any(), any());
+        verify(userAchievementModelAssembler, never()).toModel(any());
     }
 
 }

@@ -4,12 +4,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import pl.derleta.nebula.domain.rest.Role;
+import pl.derleta.nebula.exceptions.TokenExpiredException;
 import pl.derleta.nebula.service.TokenProvider;
 
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -89,6 +89,22 @@ public class AuthorizationServiceImplTest {
         assertFalse(result, "Expected FALSE because token does not contain the ADMIN role.");
         verify(tokenProvider, times(1)).isValid(jwtToken);
         verify(tokenProvider, times(1)).getRoles(jwtToken);
+    }
+
+    @Test
+    void notContainsAdminRole_expiredToken_throwsTokenExpiredException() {
+        // Arrange
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
+
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> tokenProvider.isValid(expiredToken));
+
+        // Verify interactions
+        verify(tokenProvider).isValid(expiredToken);
+        verify(tokenProvider, never()).getRoles(any());
     }
 
 }

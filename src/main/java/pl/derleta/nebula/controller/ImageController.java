@@ -30,7 +30,7 @@ public final class ImageController {
      * and forwarding the file for further processing based on the authenticated user's ID.
      *
      * @param accessToken The JWT token extracted from the user's cookies, used for authentication checks.
-     * @param image    The multipart image file being uploaded by the user.
+     * @param image       The multipart image file being uploaded by the user.
      * @return A {@code ResponseEntity<String>} containing a message and an appropriate HTTP status code:
      * - 401 UNAUTHORIZED if the JWT token is invalid.
      * - The result of further processing through the {@code getImageResponse} method if the token is valid.
@@ -38,12 +38,11 @@ public final class ImageController {
     @PostMapping(value = DEFAULT_PATH, produces = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> upload(@CookieValue("accessToken") String accessToken,
                                          @RequestPart("file") MultipartFile image) {
-        if (!tokenProvider.isValid(accessToken)) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        } else {
+        if (tokenProvider.isValid(accessToken)) {
             long userId = tokenProvider.getUserId(accessToken);
             return getImageResponse(userId, image);
         }
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
     /**

@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import pl.derleta.nebula.exceptions.TokenExpiredException;
 import pl.derleta.nebula.service.ImageUpdater;
 import pl.derleta.nebula.service.TokenProvider;
 import pl.derleta.nebula.util.ImageUtil;
@@ -167,6 +168,22 @@ class ImageControllerTest {
             mockedStatic.verify(() -> ImageUtil.isValidImageFile(invalidImageFile), times(1));
             verify(imageUpdater, never()).update(anyLong(), any(MultipartFile.class));
         }
+    }
+
+    @Test
+    void upload_expiredToken_throwsTokenExpiredException() {
+        // Arrange
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
+
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> imageController.upload(expiredToken, validImageFile));
+
+        // Verify interactions
+        verify(tokenProvider).isValid(expiredToken);
+        verify(tokenProvider, never()).getUserId(any());
     }
 
 }

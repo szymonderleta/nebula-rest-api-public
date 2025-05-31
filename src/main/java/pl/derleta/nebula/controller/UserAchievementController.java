@@ -61,28 +61,23 @@ public final class UserAchievementController {
      *
      * @param userId        the ID of the user whose achievement is to be retrieved
      * @param achievementId the ID of the achievement to be retrieved for the user
-     * @param accessToken      the JWT token extracted from the "accessToken" cookie used for authentication and validation
+     * @param accessToken   the JWT token extracted from the "accessToken" cookie used for authentication and validation
      * @return a {@code ResponseEntity} containing the {@link UserAchievementResponse} if the request is valid and successful.
      * Returns a 401 Unauthorized status if the user ID does not match with the one from the token,
      * or a 403 Forbidden status if the provided JWT token is invalid
-     * or a 401 Unauthorized status if the provided JWT token is expired
      */
     @GetMapping(value = "/" + DEFAULT_PATH + "/{userId}/{achievementId}", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<UserAchievementResponse> get(@PathVariable Long userId, @PathVariable Integer achievementId,
                                                        @CookieValue("accessToken") String accessToken) {
-        try {
-            if (tokenProvider.isValid(accessToken)) {
-                if (Objects.equals(userId, tokenProvider.getUserId(accessToken))) {
-                    var response = modelAssembler.toModel(
-                            provider.get(userId, achievementId));
-                    return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
-                }
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-            } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        if (tokenProvider.isValid(accessToken)) {
+            if (Objects.equals(userId, tokenProvider.getUserId(accessToken))) {
+                var response = modelAssembler.toModel(
+                        provider.get(userId, achievementId));
+                return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
             }
-        } catch (TokenExpiredException e){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
     }
 
@@ -97,31 +92,27 @@ public final class UserAchievementController {
      */
     @GetMapping(value = "/" + DEFAULT_PATH + "/list", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<List<UserAchievementResponse>> getList(@CookieValue("accessToken") String accessToken) {
-        try {
-            if (tokenProvider.isValid(accessToken)) {
-                long userId = tokenProvider.getUserId(accessToken);
-                var list = provider.getList(userId);
-                var response = list.stream().map(modelAssembler::toModel).toList();
-                return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
-            } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-            }
-        } catch (TokenExpiredException e){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        if (tokenProvider.isValid(accessToken)) {
+            long userId = tokenProvider.getUserId(accessToken);
+            var list = provider.getList(userId);
+            var response = list.stream().map(modelAssembler::toModel).toList();
+            return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
     }
 
     /**
      * Retrieves a paginated list of user achievements based on the provided filtering and sorting criteria.
      *
-     * @param page       the page number to retrieve, default is 0 if not provided.
-     * @param size       the number of items per page, default is the defined default page size.
-     * @param sortBy     the attribute by which the results should be sorted, default is "achievementId".
-     * @param sortOrder  the order in which the results should be sorted, the default is "asc" (ascending order).
-     * @param level      the achievement level to filter by, optional and defaults to 5 if not provided.
-     * @param filterType the type of filter to apply on the level, optional and defaults to "less or equal",
-     *                   possible values since 30 mai 2024: greater, less, greater or equal, less or equal, notequal
-     * @param accessToken   the JWT token extracted from the cookie header, used for authentication/authorization.
+     * @param page        the page number to retrieve, default is 0 if not provided.
+     * @param size        the number of items per page, default is the defined default page size.
+     * @param sortBy      the attribute by which the results should be sorted, default is "achievementId".
+     * @param sortOrder   the order in which the results should be sorted, the default is "asc" (ascending order).
+     * @param level       the achievement level to filter by, optional and defaults to 5 if not provided.
+     * @param filterType  the type of filter to apply on the level, optional and defaults to "less or equal",
+     *                    possible values since 30 mai 2024: greater, less, greater or equal, less or equal, notequal
+     * @param accessToken the JWT token extracted from the cookie header, used for authentication/authorization.
      * @return a {@code ResponseEntity} containing a {@code Page<UserAchievementResponse>} with the filtered and sorted user achievements,
      * or a {@code ResponseEntity} with a forbidden status if the JWT token is invalid.
      * or a 401 Unauthorized status if the provided JWT token is expired
@@ -134,21 +125,17 @@ public final class UserAchievementController {
                                                                  @RequestParam(required = false, defaultValue = "5") Integer level,
                                                                  @RequestParam(required = false, defaultValue = "less or equal") String filterType,
                                                                  @CookieValue("accessToken") String accessToken) {
-        try {
-            if (tokenProvider.isValid(accessToken)) {
-                long userId = tokenProvider.getUserId(accessToken);
-                var filterRequest = UserAchievementFilterRequest.builder()
-                        .page(page).size(size).sortBy(sortBy).sortOrder(sortOrder)
-                        .userId(userId).level(level).filterType(filterType)
-                        .build();
-                var responsePage = UserAchievementApiMapper.toPageResponse(
-                        provider.getPage(filterRequest));
-                return new ResponseEntity<>(responsePage, new HttpHeaders(), HttpStatus.OK);
-            } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-            }
-        } catch (TokenExpiredException e){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        if (tokenProvider.isValid(accessToken)) {
+            long userId = tokenProvider.getUserId(accessToken);
+            var filterRequest = UserAchievementFilterRequest.builder()
+                    .page(page).size(size).sortBy(sortBy).sortOrder(sortOrder)
+                    .userId(userId).level(level).filterType(filterType)
+                    .build();
+            var responsePage = UserAchievementApiMapper.toPageResponse(
+                    provider.getPage(filterRequest));
+            return new ResponseEntity<>(responsePage, new HttpHeaders(), HttpStatus.OK);
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
     }
 

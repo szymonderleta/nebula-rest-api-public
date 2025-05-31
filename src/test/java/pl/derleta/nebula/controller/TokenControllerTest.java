@@ -66,6 +66,7 @@ class TokenControllerTest {
     @Test
     void get_validToken_returnsTokenDataResponse() {
         // Arrange
+        when(tokenProvider.isValid(validToken)).thenReturn(true);
         when(tokenProvider.getTokenData(validToken)).thenReturn(tokenData);
         when(tokenModelAssembler.toModel(tokenData)).thenReturn(tokenDataResponse);
 
@@ -79,6 +80,24 @@ class TokenControllerTest {
         verify(tokenProvider, times(1)).getTokenData(validToken);
         verify(tokenModelAssembler, times(1)).toModel(tokenData);
     }
+
+    @Test
+    void get_expiredToken_throwsTokenExpiredException() {
+        // Arrange
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
+
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> tokenController.get(expiredToken));
+
+        // Verify interactions
+        verify(tokenProvider).isValid(expiredToken);
+        verify(tokenProvider, never()).getUserId(any());
+        verify(tokenModelAssembler, never()).toModel(any());
+    }
+
 
     @Test
     void isValid_validToken_returnsTrue() {
@@ -106,26 +125,28 @@ class TokenControllerTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotEquals(Boolean.TRUE, response.getBody());
         verify(tokenProvider, times(1)).isValid(invalidToken);
     }
 
     @Test
-    void isValid_expiredToken_returnsUnauthorized() {
+    void isValid_expiredToken_throwsTokenExpiredException() {
         // Arrange
-        when(tokenProvider.isValid(validToken)).thenThrow(new TokenExpiredException("Access token has expired"));
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
 
-        // Act
-        ResponseEntity<Boolean> response = tokenController.isValid(validToken);
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> tokenController.isValid(expiredToken));
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals(false, response.getBody());
-        verify(tokenProvider, times(1)).isValid(validToken);
-        verify(tokenProvider, times(0)).getUserId(validToken);
+        // Verify interactions
+        verify(tokenProvider).isValid(expiredToken);
+        verify(tokenProvider, never()).getUserId(any());
+        verify(tokenModelAssembler, never()).toModel(any());
     }
+
 
     @Test
     void getRoles_validToken_returnsRoles() {
@@ -161,20 +182,22 @@ class TokenControllerTest {
         verify(tokenProvider, never()).getRoles(any());
     }
 
+
     @Test
-    void getRoles_expiredToken_returnsUnauthorized() {
+    void getRoles_expiredToken_throwsTokenExpiredException() {
         // Arrange
-        when(tokenProvider.isValid(validToken)).thenThrow(new TokenExpiredException("Access token has expired"));
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
 
-        // Act
-        ResponseEntity<Set<Role>> response = tokenController.getRoles(validToken);
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> tokenController.getRoles(expiredToken));
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertNull(response.getBody());
-        verify(tokenProvider, times(1)).isValid(validToken);
-        verify(tokenProvider, times(0)).getUserId(validToken);
+        // Verify interactions
+        verify(tokenProvider).isValid(expiredToken);
+        verify(tokenProvider, never()).getUserId(any());
+        verify(tokenModelAssembler, never()).toModel(any());
     }
 
     @Test
@@ -195,20 +218,22 @@ class TokenControllerTest {
     }
 
     @Test
-    void getEmail_expiredToken_returnsUnauthorized() {
+    void getEmail_expiredToken_throwsTokenExpiredException() {
         // Arrange
-        when(tokenProvider.isValid(validToken)).thenThrow(new TokenExpiredException("Access token has expired"));
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
 
-        // Act
-        ResponseEntity<String> response = tokenController.getEmail(validToken);
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> tokenController.getEmail(expiredToken));
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals(TokenResponseType.ACCESS_TOKEN_EXPIRED.getInfo(), response.getBody());
-        verify(tokenProvider, times(1)).isValid(validToken);
-        verify(tokenProvider, times(0)).getEmail(validToken);
+        // Verify interactions
+        verify(tokenProvider).isValid(expiredToken);
+        verify(tokenProvider, never()).getUserId(any());
+        verify(tokenModelAssembler, never()).toModel(any());
     }
+
 
     @Test
     void getEmail_invalidToken_returnsBadRequest() {
@@ -262,20 +287,22 @@ class TokenControllerTest {
     }
 
     @Test
-    void getId_expiredToken_returnsUnauthorized() {
+    void getId_expiredToken_throwsTokenExpiredException() {
         // Arrange
-        when(tokenProvider.isValid(validToken)).thenThrow(new TokenExpiredException("Access token has expired"));
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
 
-        // Act
-        ResponseEntity<Long> response = tokenController.getId(validToken);
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> tokenController.getId(expiredToken));
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals(-1L, response.getBody());
-        verify(tokenProvider, times(1)).isValid(validToken);
-        verify(tokenProvider, times(0)).getUserId(validToken);
+        // Verify interactions
+        verify(tokenProvider).isValid(expiredToken);
+        verify(tokenProvider, never()).getUserId(any());
+        verify(tokenModelAssembler, never()).toModel(any());
     }
+
 
     @Test
     void refreshAccess_validToken_returnsTrue() {
@@ -330,18 +357,20 @@ class TokenControllerTest {
     }
 
     @Test
-    void refreshAccess_expiredToken_returnsUnauthorized() {
+    void refreshAccess_expiredToken_throwsTokenExpiredException() {
         // Arrange
-        when(tokenProvider.isValid(validToken)).thenThrow(new TokenExpiredException("Refresh token has expired"));
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
 
-        // Act
-        ResponseEntity<Set<Role>> response = tokenController.getRoles(validToken);
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> tokenController.refreshAccess(expiredToken));
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertNull(response.getBody());
-        verify(tokenProvider, times(1)).isValid(validToken);
+        // Verify interactions
+        verify(tokenProvider).isValid(expiredToken);
+        verify(tokenProvider, never()).getUserId(any());
+        verify(tokenModelAssembler, never()).toModel(any());
     }
 
 }

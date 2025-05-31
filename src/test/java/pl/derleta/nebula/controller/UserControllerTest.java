@@ -17,6 +17,7 @@ import pl.derleta.nebula.controller.response.Response;
 import pl.derleta.nebula.controller.response.UserSettingsResponse;
 import pl.derleta.nebula.domain.mapper.UserSettingsMapper;
 import pl.derleta.nebula.domain.model.*;
+import pl.derleta.nebula.exceptions.TokenExpiredException;
 import pl.derleta.nebula.service.TokenProvider;
 import pl.derleta.nebula.service.UserProvider;
 import pl.derleta.nebula.service.UserUpdater;
@@ -174,6 +175,25 @@ class UserControllerTest {
     }
 
     @Test
+    void getUserData_expiredToken_throwsTokenExpiredException() {
+        // Arrange
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(expiredToken))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
+
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> userController.getUserData(expiredToken));
+
+        // Verify interactions
+        verify(tokenProvider).isValid(expiredToken);
+        verify(tokenProvider, never()).getUserId(any());
+        verify(userProvider, never()).get(any());
+        verify(userModelAssembler, never()).toModel(any());
+    }
+
+
+    @Test
     void updateUserProfile_validTokenAndMatchingUserId_returnsUpdatedProfile() {
         // Arrange
         when(tokenProvider.isValid(validToken, userId)).thenReturn(true);
@@ -191,6 +211,25 @@ class UserControllerTest {
         verify(userUpdater, times(1)).updateProfile(profileUpdateRequest);
         verify(userModelAssembler, times(1)).toModel(nebulaUser);
     }
+
+    @Test
+    void updateUserProfile_expiredToken_throwsTokenExpiredException() {
+        // Arrange
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(eq(expiredToken), anyLong()))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
+
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> userController.updateUserProfile(expiredToken, profileUpdateRequest));
+
+        // Verify interactions
+        verify(tokenProvider).isValid(eq(expiredToken), anyLong());
+        verify(tokenProvider, never()).getUserId(any());
+        verify(userProvider, never()).get(any());
+        verify(userModelAssembler, never()).toModel(any());
+    }
+
 
     @Test
     void updateUserProfile_invalidToken_returnsForbidden() {
@@ -234,6 +273,25 @@ class UserControllerTest {
             mockedStaticUserSettingsApiMapper.verify(() -> UserSettingsApiMapper.toResponse(userSettings));
         }
     }
+
+    @Test
+    void updateUserSettings_expiredToken_throwsTokenExpiredException() {
+        // Arrange
+        String expiredToken = "expired-token";
+        when(tokenProvider.isValid(eq(expiredToken), anyLong()))
+                .thenThrow(new TokenExpiredException("TOKEN_EXPIRED"));
+
+        // Act & Assert
+        assertThrows(TokenExpiredException.class,
+                () -> userController.updateUserSettings(expiredToken, userSettingsRequest));
+
+        // Verify interactions
+        verify(tokenProvider).isValid(eq(expiredToken), anyLong());
+        verify(tokenProvider, never()).getUserId(any());
+        verify(userProvider, never()).get(any());
+        verify(userModelAssembler, never()).toModel(any());
+    }
+
 
     @Test
     void updateUserSettings_invalidToken_returnsForbidden() {

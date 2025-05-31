@@ -1,21 +1,24 @@
 # Nebula REST API
 
+<div align="left">
+
+![Author](https://img.shields.io/badge/Author-Szymon%20Derleta-white?style=for-the-badge)
+
+![Release](https://img.shields.io/badge/Release-Public%20Release-green?style=for-the-badge)  
+![Version](https://img.shields.io/badge/Version-3.1.0-green?style=for-the-badge)
+
+📄 Changelog: [CHANGELOG.md](info/CHANGELOG.md)  
+🔗 Repository: [GitHub - Nebula Rest Api](https://github.com/szymonderleta/nebula-rest-api-public)  
+🛠️ Jenkins Pipeline: [JENKINS.md](info/JENKINS.md)  
+🆘 Help: [HELP.md](info/HELP.md)
+</div>
+
 ## Overview
 
 Nebula REST API is the home application based on REST API, for the Andromeda platform, designed to provide a centralized login and access
 point to various game applications currently under construction. This application serves as a gateway, allowing users to
 authenticate and navigate to the games and services offered by the platform. It also stores general user settings,
 allows users to upload profile images, and update their preferences.
-
-## Current Version
-
-**v 3.0.0 Public Release**  
-- Added over 400 unit and integration tests.  
-- Added an endpoint to refresh the accessToken (using the cookie with a valid refreshToken). Removed the old JWT token cookie system and replaced it with both accessToken and refreshToken, which are now stored as HttpOnly cookies. The accessToken is valid for 1 hour, while the refreshToken is valid for over 20 days.  
-- Fixed small errors and refactored some parts of the code.
-
-**v 2.0.0 Beta Release**  
-This version is intended for testing purposes in a pre-production environment.
 
 ## Built With
 
@@ -32,14 +35,14 @@ This version is intended for testing purposes in a pre-production environment.
 
 ## Non-Functional Features
 
-- High performance and low latency API responses.
+- High-performance and low-latency API responses.
 - Designed for scalability to accommodate future games and extensions.
 - Secure data transmission and storage.
 - Easily customizable for new features or changes.
 
 ## API Documentation
 
-The API documentation is available at the following URLs:
+After running the app in localhost, the API documentation will be available at the following URLs:
 
 - [Swagger UI](http://localhost:8081/swagger-ui/index.html)
 - [OpenAPI JSON](http://localhost:8081/v3/api-docs)
